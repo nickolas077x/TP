@@ -63,14 +63,26 @@ void ATPBasePlatform::OnTimelineFinished()
 
 void ATPBasePlatform::OnBoxOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Green, FString::Printf(TEXT("In")));
+	//GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Green, FString::Printf(TEXT("In")));
+	
+	if (OnPlatformClientSwitched.IsBound())
+	{
+		OnPlatformClientSwitched.Broadcast(true);
+	}
+
 	PlatformPushTimeline.SetPlayRate(ForwardMovingRate);
 	PlatformPushTimeline.Play();
 }
 
 void ATPBasePlatform::OnBoxOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Green, FString::Printf(TEXT("Out")));
+	//GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Green, FString::Printf(TEXT("Out")));
+
+	if (OnPlatformClientSwitched.IsBound())
+	{
+		OnPlatformClientSwitched.Broadcast(false);
+	}
+
 	PlatformPushTimeline.SetPlayRate(BackwardMovingRate);
 	PlatformPushTimeline.Reverse();
 }

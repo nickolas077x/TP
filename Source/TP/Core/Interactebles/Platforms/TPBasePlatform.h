@@ -19,6 +19,9 @@ public:
 	// Sets default values for this actor's properties
 	ATPBasePlatform();
 
+	DECLARE_EVENT_OneParam(ATPBasePlatform, FPlatformClientOnSwitchedSignature, bool);
+		FPlatformClientOnSwitchedSignature OnPlatformClientSwitched;
+
 protected:
 	virtual void BeginPlay() override;
 
