@@ -78,11 +78,12 @@ void ATPLight::OnPlatformSwitched(bool bIsOn)
 
 void ATPLight::LightChangeProgress(float Value)
 {
-	float Brightness = FMath::Lerp(0.0f, MaxBrightness, Value);
+	
+	Brightness = FMath::Lerp(0.0f, MaxBrightness, Value);
 	DynamicMaterial->SetScalarParameterValue(TEXT("Bright"), Brightness);
 	LightPoint->SetIntensity(Brightness * 5000);
 
-	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Green, FString::Printf(TEXT("Out")));
+	//GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Green, FString::Printf(TEXT("Out")));
 }
 
 // Called every frame

@@ -8,6 +8,7 @@
 #include <Engine/EngineTypes.h>
 #include <Components/StaticMeshComponent.h>
 #include <Components/BoxComponent.h>
+#include <UObject/CoreNet.h>
 #include "TPBasePlatform.generated.h"
 
 UCLASS()
@@ -22,6 +23,8 @@ public:
 	DECLARE_EVENT_OneParam(ATPBasePlatform, FPlatformClientOnSwitchedSignature, bool);
 		FPlatformClientOnSwitchedSignature OnPlatformClientSwitched;
 
+		virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -30,6 +33,9 @@ protected:
 	FTimeline PlatformPushTimeline;
 
 	FTimerHandle TimerHandle;
+
+	UPROPERTY(Replicated, ReplicatedUsing = ChangeStatus)
+		bool bIsOn;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		UStaticMeshComponent* PlatformMesh;
@@ -55,14 +61,11 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		UCurveFloat* PlatformAlpha;
 
-	UFUNCTION(BlueprintCallable)
-		void MoveThePlatform();
-
 	UFUNCTION()
 		void PlatformMovementProgress(float Value);
 
 	UFUNCTION()
-		void OnTimelineFinished();
+		void ChangeStatus(bool bIsOnOld);
 
 	UFUNCTION()
 		void OnBoxOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);

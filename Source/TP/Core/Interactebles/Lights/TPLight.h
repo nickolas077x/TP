@@ -28,7 +28,7 @@ class TP_API ATPLight : public AActor
 	
 public:	
 	// Sets default values for this actor's properties
-	ATPLight();
+	ATPLight();	
 
 protected:
 	// Called when the game starts or when spawned
@@ -49,6 +49,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		UCurveFloat* LightAlpha;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		float Brightness = 0.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		float BrightnessRate = 1.0f;
@@ -74,7 +77,7 @@ protected:
 	UFUNCTION()
 		void LightChangeProgress(float Value);
 
-		UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		float ForwardMovingRate = 1.0f;
 
 public:	

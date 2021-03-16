@@ -2,6 +2,8 @@
 
 
 #include "TPBasePlatform.h"
+#include <Components/CapsuleComponent.h>
+#include <Net/UnrealNetwork.h>
 
 // Sets default values
 ATPBasePlatform::ATPBasePlatform()
@@ -16,6 +18,13 @@ ATPBasePlatform::ATPBasePlatform()
 
 	PlatformCollisionMesh = CreateDefaultSubobject<UBoxComponent>(TEXT("Collision"));
 	PlatformCollisionMesh->SetupAttachment(PlatformMesh);
+}
+
+
+void ATPBasePlatform::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ATPBasePlatform, bIsOn);
 }
 
 // Called when the game starts or when spawned
@@ -40,51 +49,48 @@ void ATPBasePlatform::BeginPlay()
 		FOnTimelineEvent OnFinishedCallback;
 		OnFinishedCallback.BindUFunction(this, FName("OnTimelineFinished"));
 		PlatformPushTimeline.SetTimelineFinishedFunc(OnFinishedCallback);
-
-		//MoveThePlatform();
 	}
-}
-
-void ATPBasePlatform::MoveThePlatform()
-{
-
 }
 
 void ATPBasePlatform::PlatformMovementProgress(float Value)
 {
-FVector NewLocation = FMath::Lerp(StartLocation, EndLocation, Value);
+	FVector NewLocation = FMath::Lerp(StartLocation, EndLocation, Value);
 	PlatformMesh->SetRelativeLocation(NewLocation);
 }
 
-void ATPBasePlatform::OnTimelineFinished()
-{
 
+void ATPBasePlatform::ChangeStatus(bool bIsOnOld)
+{
+	bIsOn = bIsOnOld;
 }
 
 void ATPBasePlatform::OnBoxOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	//GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Green, FString::Printf(TEXT("In")));
-	
-	if (OnPlatformClientSwitched.IsBound())
+	if (HasAuthority())
 	{
-		OnPlatformClientSwitched.Broadcast(true);
-	}
+		ChangeStatus(true);
+		if (OnPlatformClientSwitched.IsBound())
+		{
+			OnPlatformClientSwitched.Broadcast(bIsOn);
+		}
 
-	PlatformPushTimeline.SetPlayRate(ForwardMovingRate);
-	PlatformPushTimeline.Play();
+		PlatformPushTimeline.SetPlayRate(ForwardMovingRate);
+		PlatformPushTimeline.Play();
+	}
 }
 
 void ATPBasePlatform::OnBoxOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	//GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Green, FString::Printf(TEXT("Out")));
-
-	if (OnPlatformClientSwitched.IsBound())
+	if (HasAuthority())
 	{
-		OnPlatformClientSwitched.Broadcast(false);
-	}
+		ChangeStatus(false);
+		if (OnPlatformClientSwitched.IsBound())
+		{
+			OnPlatformClientSwitched.Broadcast(bIsOn);
+		}
 
-	PlatformPushTimeline.SetPlayRate(BackwardMovingRate);
-	PlatformPushTimeline.Reverse();
+		PlatformPushTimeline.SetPlayRate(BackwardMovingRate);
+	}	PlatformPushTimeline.Reverse();
 }
 
 // Called every frame
