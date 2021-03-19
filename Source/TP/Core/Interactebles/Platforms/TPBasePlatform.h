@@ -25,6 +25,9 @@ public:
 
 		virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+		UPROPERTY(Replicated, ReplicatedUsing = OnRep_IsOn)
+			bool bIsOn;
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -33,9 +36,6 @@ protected:
 	FTimeline PlatformPushTimeline;
 
 	FTimerHandle TimerHandle;
-
-	UPROPERTY(Replicated, ReplicatedUsing = ChangeStatus)
-		bool bIsOn;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		UStaticMeshComponent* PlatformMesh;
@@ -65,7 +65,7 @@ protected:
 		void PlatformMovementProgress(float Value);
 
 	UFUNCTION()
-		void ChangeStatus(bool bIsOnOld);
+		void OnRep_IsOn(bool bIsOnOld);
 
 	UFUNCTION()
 		void OnBoxOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);

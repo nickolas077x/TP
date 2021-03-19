@@ -18,6 +18,8 @@ ATPBasePlatform::ATPBasePlatform()
 
 	PlatformCollisionMesh = CreateDefaultSubobject<UBoxComponent>(TEXT("Collision"));
 	PlatformCollisionMesh->SetupAttachment(PlatformMesh);
+
+	bReplicates = true;
 }
 
 
@@ -59,38 +61,70 @@ void ATPBasePlatform::PlatformMovementProgress(float Value)
 }
 
 
-void ATPBasePlatform::ChangeStatus(bool bIsOnOld)
+void ATPBasePlatform::OnRep_IsOn(bool bIsOnOld)
 {
-	bIsOn = bIsOnOld;
+	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Green, FString::Printf(TEXT("TEST")));
+	if (OnPlatformClientSwitched.IsBound())
+	{
+		OnPlatformClientSwitched.Broadcast(bIsOn);
+	}
+
+	if (bIsOn)
+	{
+		PlatformPushTimeline.SetPlayRate(ForwardMovingRate);
+		PlatformPushTimeline.Play();
+	}
+	else
+	{
+		PlatformPushTimeline.SetPlayRate(BackwardMovingRate);
+		PlatformPushTimeline.Reverse();
+	}
 }
 
 void ATPBasePlatform::OnBoxOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (HasAuthority())
+	APawn* OtherPawn = Cast<APawn>(OtherActor);
+	if (!IsValid(OtherPawn))
 	{
-		ChangeStatus(true);
-		if (OnPlatformClientSwitched.IsBound())
-		{
-			OnPlatformClientSwitched.Broadcast(bIsOn);
-		}
-
-		PlatformPushTimeline.SetPlayRate(ForwardMovingRate);
-		PlatformPushTimeline.Play();
+		return;
 	}
+	if (!OtherComp->IsA<UCapsuleComponent>())
+	{
+		return;
+	}
+	if (HasAuthority() || OtherPawn->IsLocallyControlled())
+	{
+		bIsOn = true;
+		OnRep_IsOn(false);
+	}
+	/*else if (OtherPawn->IsLocallyControlled())
+	{
+		bIsOn = true;
+		OnRep_IsOn(false);
+	}*/
 }
 
 void ATPBasePlatform::OnBoxOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	if (HasAuthority())
+	APawn* OtherPawn = Cast<APawn>(OtherActor);
+	if (!IsValid(OtherPawn))
 	{
-		ChangeStatus(false);
-		if (OnPlatformClientSwitched.IsBound())
-		{
-			OnPlatformClientSwitched.Broadcast(bIsOn);
-		}
-
-		PlatformPushTimeline.SetPlayRate(BackwardMovingRate);
-	}	PlatformPushTimeline.Reverse();
+		return;
+	}
+	if (!OtherComp->IsA<UCapsuleComponent>())
+	{
+		return;
+	}
+	if (HasAuthority() || OtherPawn->IsLocallyControlled())
+	{
+		bIsOn = false;
+		OnRep_IsOn(true);
+	}
+	/*else if (OtherPawn->IsLocallyControlled())
+	{
+		bIsOn = false;
+		OnRep_IsOn(true);
+	}*/
 }
 
 // Called every frame
